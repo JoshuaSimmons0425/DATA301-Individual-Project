@@ -6,7 +6,7 @@ library(flextable)
 
 # Read csv file 
 
-df_path <- "data/preprocessed/final_predictors.csv"
+df_path <- "data/preprocessed/final_predictors2.csv"
 
 df <- read.csv(df_path)
 

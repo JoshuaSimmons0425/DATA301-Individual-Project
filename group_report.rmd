@@ -1,15 +1,14 @@
 ---
-title: "Group 14 Report - EDA on 2025 Steam Dataset"
-author: "Joshua Simmons: 300661575, <br>Lidija Maravic: 300623904
-
-WRITE YOUR NAMES and IDs HERE"
-
-date: "Due: 3 September 2026"
+title: "Investigation of Popularity in Steam Games - DATA301 Individual Component"
+author: "Joshua Simmons: 300661575
+date: "25 October 2026"
 output: pdf_document
 df_print: paged
 ---
 
-# Background and Data
+# Executive Summary
+
+# Background
 **Dataset and Source**
 
 The dataset we selected is the March 2025 version of the Steam Games Dataset 2025, hosted on Kaggle (Ermilov, 2025). Steam is a major digital game-distribution platform whose catalogue ranges from small independent releases to globally popular multiplayer titles. However, this is not an official Steam dataset; its source is Kaggle. It contains 89,618 games and represents a snapshot of the catalogue as of 10 March 2025, rather than a dataset that is continuously updated.
@@ -42,17 +41,16 @@ Another point worth noting was that estimated_owners was recorded as ordered cat
 
 The release date also needed some processing before it could be used in the analysis. We used it to calculate years_since_release, with 31 March 2025 used as the reference date for the dataset snapshot.
 
-
-
 # Ethics, Privacy and Security
 
 ## Project scope
 The Kaggle source contains 89,618 Steam game records and 47 fields. The repository retains 17 fields, including title, release date, genres, price, operating-system support, languages, achievements, DLC, estimated owner tier, review counts and peak concurrent users, then derives six variables. Its current cleaning rule removes 7,904 games without any usable review signal, leaving 81,714 rows. Public availability does not remove the duty to assess accuracy, fairness, provenance and downstream harm (Ermilov, 2025).
 
 ## Ethical considerations
-Popularity is a constructed outcome, not an observed fact. Estimated-owner bands are imprecise, reviews represent only people who post them, and peak concurrent users measures a short-term maximum rather than long-run engagement or quality. The data are also strongly right-skewed. In the project data, 36,419 total-review values were encoded as -1; 28,515 remain missing after cleaning; 78.9% of peak-CCU values are zero; 6,285 owner bands become missing; and 9,151 games have a review total but zero positive and negative reviews. These values must not be treated as ordinary measurements without qualification.
+Popularity is a constructed outcome, not an observed fact. Estimated-owner bands are imprecise, reviews represent only people who post them, and peak concurrent users measures a short-term maximum rather than long-run engagement or quality. The data are also contains strongly right-skewed features. In the project data, 36,419 total-review values were encoded as -1; 28,515 remain missing after cleaning; 78.9% of peak-CCU values are zero; 6,285 owner bands become missing; and 9,151 games have a review total but zero positive and negative reviews. These values must not be treated as ordinary measurements without qualification.
 
 Removing games with no review signal may disproportionately exclude new, niche or low-visibility titles and therefore exaggerate relationships between features and popularity. Results should report the denominator and missingness for every analysis, compare findings with and without the 7,904-row exclusion, and use association rather than causal language. The March 2025 snapshot also covers Steam only, so it cannot represent the whole games market, console players or later changes in price, reviews and player counts.
+
 Stakeholders include players, Valve, publishers and developers. Rankings or claims about low performance could cause reputational or commercial harm, particularly to small independent studios, while the benefit of the analysis is mainly improved understanding of market patterns. Aggregated genre-level findings should therefore be preferred to naming weak performers. Language coverage also requires care: counting languages treats mere availability as equivalent to translation quality and may undervalue games serving smaller linguistic or cultural communities. The team should describe this limitation and avoid using the model for automated funding, marketing or platform-placement decisions.
 
 Finally, the dataset must be attributed as a March 2025 Kaggle version derived from the Steam API and Steam Spy. The posted MIT licence should be recorded, but the team should still comply with Valve's API terms, avoid implying Valve endorsement, and distribute only the data needed for the academic purpose (Valve Corporation, 2010).
@@ -71,17 +69,16 @@ The GitHub repository is private, its commit history provides version control, a
 Integrity and reproducibility require stronger controls. The team should record the Kaggle version, access date, licence and SHA-256 checksum; retain an immutable read-only source copy; pin R package versions; and validate the schema, unique appid values, allowed owner tiers, non-negative fields and missingness before analysis. The current script defines a reduced final_predictors object but writes the full working steam table, so the export should be corrected and peer-reviewed, with a test that confirms the intended columns and row count. Unresolved cleaning choices should be documented rather than left only as code comments.
 Repository access should use least privilege, multi-factor authentication, protected main-branch reviews and regular recoverable backups. Secrets should be stored in environment variables and scanned before commits. If personal data are ever introduced, files should additionally be encrypted in transit and at rest, access logged, retention limited and an incident-response process established. These safeguards reflect the Privacy Act's requirement for reasonable protection against loss, unauthorised access, modification, disclosure and misuse (OPC, n.d.-b).
 
+# Exploratory Data Analysis
+
+# Detailed Analysis Results
+
+# Conclusions and Recommendations
+
+
 ## References
 Ermilov, A. (2025). Steam Games Dataset 2025 (Version 2) [Data set]. Kaggle. https://www.kaggle.com/datasets/artermiloff/steam-games-dataset
 Office of the Privacy Commissioner. (n.d.-a). Principle 1 - Purpose for collection of personal information. https://www.privacy.org.nz/privacy-principles/1/
 Office of the Privacy Commissioner. (n.d.-b). Principle 5 - Storage and security of information. https://www.privacy.org.nz/privacy-principles/5/
 Privacy Act 2020, No. 31 (NZ). https://www.legislation.govt.nz/act/public/2020/31/en/latest/
 Valve Corporation. (2010). Steam Web API terms of use. https://steamcommunity.com/dev/apiterms?l=english
-
-
-# Exploratory Data Analysis
-
-# Individual Contributions
-
-
-
