@@ -51,3 +51,7 @@ rsconnect/
 # Large dataset
 /data/raw/*.csv
 /data/preprocessed/*.csv
+
+# Python Virtual Environment
+
+.venv/
