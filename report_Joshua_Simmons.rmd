@@ -1,6 +1,6 @@
 ---
 title: "Investigation of Popularity in Steam Games - DATA301 Individual Component"
-author: "Joshua Simmons: 300661575
+author: "Joshua Simmons: 300661575"
 date: "25 October 2026"
 output: pdf_document
 df_print: paged
