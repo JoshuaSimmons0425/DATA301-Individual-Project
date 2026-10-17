@@ -7,7 +7,7 @@ library(tidyverse)
 
 # Read csv file 
 
-df_path <- "data/preprocessed/final_predictors2.csv"
+df_path <- "data/preprocessed/final_predictors.csv"
 
 df <- read.csv(df_path)
 
@@ -98,3 +98,73 @@ pairs.panels(df_log_subset,
              density = TRUE,     # show density plots
              ellipses = TRUE)    # show correlation ellipses
 
+# Exploring the picked subset of target variables that will be converted and derived into three seperate popularity indexes: Lifetime Engagement, Recent Velocity and User Sentiment
+
+df_targets <- df %>% select(c("owners_mid", "peak_ccu", "average_playtime_forever", "average_playtime_2weeks", "median_playtime_forever", "median_playtime_2weeks","num_reviews_total", "positive", "negative"))
+
+head(df_targets)
+
+# -------------------------------------------------------------------------
+# Group 1: Lifetime Engagement Variables (Log Scale due to extreme skew)
+# -------------------------------------------------------------------------
+engagement_vars <- c("owners_mid", "peak_ccu")
+
+df_targets %>%
+  select(all_of(engagement_vars)) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
+  ggplot(aes(x = Value)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  # Using log10 transformation because Steam metrics span multiple orders of magnitude
+  scale_x_continuous(trans = "log1p", labels = scales::comma_format())  +
+  facet_wrap(~Variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distribution of Lifetime Engagement Variables",
+       subtitle = "X-axis is Log10 transformed to handle high skewness",
+       x = "Value (Log Scale)", y = "Count")
+
+# -------------------------------------------------------------------------
+# Group 2: Recent Velocity & Engagement (Handling Zeros + Log Scale)
+# -------------------------------------------------------------------------
+playtime_vars <- c("median_playtime_forever", "median_playtime_2weeks")
+
+df_targets %>%
+  select(all_of(playtime_vars)) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
+  ggplot(aes(x = Value)) +
+  # log1p (log(x + 1)) handles the absolute 0 values safely without dropping rows
+  geom_histogram(bins = 30, fill = "darkorange", color = "white") +
+  scale_x_continuous(trans = "log1p", labels = scales::comma_format()) +
+  facet_wrap(~Variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distribution of Playtime Metrics",
+       subtitle = "X-axis uses log1p transformation to accommodate 0-minute values",
+       x = "Playtime in Minutes (Log+1 Scale)", y = "Count")
+
+df_targets %>%
+  select(all_of(playtime_vars)) %>%
+  filter(median_playtime_2weeks != 0, median_playtime_forever != 0) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
+  ggplot(aes(x = Value)) +
+  # log1p (log(x + 1)) handles the absolute 0 values safely without dropping rows
+  geom_histogram(bins = 30, fill = "darkorange", color = "white") +
+  scale_x_continuous(trans = "log1p", labels = scales::comma_format()) +
+  facet_wrap(~Variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distribution of Playtime Metrics (Without Zero Values)",
+       subtitle = "X-axis uses log1p transformation to accommodate 0-minute values",
+       x = "Playtime in Minutes (Log+1 Scale)", y = "Count")
+
+# -------------------------------------------------------------------------
+# Group 3: User Sentiment (Derived Ratios for better EDA value)
+# -------------------------------------------------------------------------
+# Absolute review counts are identical to engagement. For sentiment, 
+# it is much more useful to plot the positive review ratio.
+df_targets %>%
+  mutate(positive_ratio = positive / num_reviews_total) %>%
+  ggplot(aes(x = positive_ratio)) +
+  geom_histogram(bins = 20, fill = "forestgreen", color = "white", boundary = 0) +
+  scale_x_continuous(labels = scales::percent_format(), limits = c(0, 1)) +
+  theme_minimal() +
+  labs(title = "Distribution of User Sentiment",
+       subtitle = "Percentage of positive reviews out of total reviews",
+       x = "Positive Review Ratio", y = "Count")
