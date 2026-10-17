@@ -166,6 +166,6 @@ steam <- steam %>% select(-any_of(drop_columns))
 
 write.csv(
   steam,
-  "data/preprocessed/final_predictors2.csv",
+  "data/preprocessed/final_predictors.csv",
   row.names = FALSE
 )
