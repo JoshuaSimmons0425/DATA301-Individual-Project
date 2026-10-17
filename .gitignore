@@ -51,6 +51,7 @@ rsconnect/
 # Large dataset
 /data/raw/*.csv
 /data/preprocessed/*.csv
+/data/enriched/*.csv
 
 # Python Virtual Environment
 
