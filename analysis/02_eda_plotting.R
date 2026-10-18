@@ -23,7 +23,7 @@ pander(na_table)
 
 # Plot genre counts to show occurances across the steam game population
 
-df_genres = df %>% select(c("genre_Action", "genre_Adventure", "genre_Strategy", "genre_Indie", "genre_RPG", "genre_Casual", "genre_Simulation", "genre_Sports", "genre_Other"))
+df_genres = df %>% select(c("genre_Action", "genre_Adventure", "genre_Strategy", "genre_Indie", "genre_RPG", "genre_Casual", "genre_Simulation", "genre_Sports"))
 
 df_long <- df_genres %>%
   pivot_longer(
@@ -80,14 +80,14 @@ pander(p_matrix, caption = "Chi-Square Test Matrix of P-Values Across Genres")
 
 # Use a scatterplot matrix across all continous dependent variables to see if multicollinearity occurs and how strong
 
-df_subset <- df %>% select(c("price", "achievements", "dlc_count", "total_languages"))
+df_subset <- df %>% select(c("price", "achievements", "dlc_count", "total_languages", "num_tags", "num_categories"))
 
 df_log_subset <- as.data.frame(lapply(df_subset, log1p))
 
 pairs.panels(df_subset, 
              main = "Scatterplot Matrix of Continous Features",
              method = "pearson", # correlation method
-             hist.col = "gold",  # histogram color
+             hist.col = "green",  # histogram color
              density = TRUE,     # show density plots
              ellipses = TRUE)    # show correlation ellipses
 
@@ -160,7 +160,7 @@ df_targets %>%
 # Absolute review counts are identical to engagement. For sentiment, 
 # it is much more useful to plot the positive review ratio.
 df_targets %>%
-  mutate(positive_ratio = positive / num_reviews_total) %>%
+  mutate(positive_ratio = positive / (positive + negative)) %>%
   ggplot(aes(x = positive_ratio)) +
   geom_histogram(bins = 20, fill = "forestgreen", color = "white", boundary = 0) +
   scale_x_continuous(labels = scales::percent_format(), limits = c(0, 1)) +

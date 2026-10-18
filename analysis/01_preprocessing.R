@@ -45,7 +45,9 @@ core_cols <- c(
   "supported_languages",
   "full_audio_languages",  
   "achievements",         
-  "dlc_count",            
+  "dlc_count",
+  "tags",
+  "categories",            
   "estimated_owners",     
   "num_reviews_total",
   "average_playtime_forever",
@@ -80,22 +82,27 @@ steam <- steam %>%
       release_month %in% c(9, 10, 11) ~ "Autumn"
     ),
     release_season = factor(release_season, levels = c("Spring", "Summer", "Autumn", "Winter", "Unknown")),
-    years_since_release = as.numeric(ref_date - release_date) / 365.25
   ) %>%
   select(-release_month)
 
-# Impute missing years_since_release with the median value to keep rows viable
-if (any(is.na(steam[["years_since_release"]]))) {
-  median_years <- median(steam[["years_since_release"]], na.rm = TRUE)
-  steam[["years_since_release"]][is.na(steam[["years_since_release"]])] <- median_years
-}
-
 
 ####### 3. DLC Count to Binary (Derivation) ###########################
-steam[["dlc_count"]][is.na(steam[["dlc_count"]])] <- 0
-steam <- steam %>%
-  mutate(has_dlc = if_else(dlc_count > 0, 1, 0))
+# steam[["dlc_count"]][is.na(steam[["dlc_count"]])] <- 0
+# steam <- steam %>%
+#   mutate(has_dlc = if_else(dlc_count > 0, 1, 0))
 
+os.columns <- c("windows", "mac", "linux")
+
+steam <- steam %>%
+  mutate(
+    # Calculate the row sums across the specified OS columns
+    num_supported_os = rowSums(across(all_of(os.columns))),
+    
+    # Convert the column to a factor 
+    # Note: your original code referenced 'no.supported_OS', 
+    # but here we use 'num_supported_os' to keep it consistent.
+    num_supported_os = as.factor(num_supported_os)
+  )
 
 ####### 4. Raw Numerical Handling (No Transforms) ######################
 # Standardising structural NAs to zero for safe analytical operations
@@ -103,10 +110,10 @@ steam[["price"]][is.na(steam[["price"]])] <- 0
 steam[["achievements"]][is.na(steam[["achievements"]])] <- 0
 
 
-####### 5. Language Column Parsing & Counts (Derivation) ###############
-count_languages <- function(lang_col) {
-  parsed <- str_split(str_remove_all(lang_col, "\\[|\\]|'"), ", ")
-  lengths(parsed) * (lang_col != "[]" & lang_col != "" & !is.na(lang_col))
+####### 5. Language, Categories and Tags Column Parsing & Counts ###############
+parse_languages <- function(lang_col) {
+  # Helper to parse string representation of list into a vector
+  str_split(str_remove_all(lang_col, "\\[|\\]|'"), ", ")
 }
 
 steam <- steam %>%
@@ -114,11 +121,41 @@ steam <- steam %>%
     supported_languages = if_else(is.na(supported_languages) | supported_languages == "", "[]", supported_languages),
     full_audio_languages = if_else(is.na(full_audio_languages) | full_audio_languages == "", "[]", full_audio_languages),
     
-    n_languages = count_languages(supported_languages),
-    n_audio_languages = count_languages(full_audio_languages),
-    total_languages = n_languages + n_audio_languages
-  )
+    # Parse both columns into list-columns of vectors
+    parsed_supported = parse_languages(supported_languages),
+    parsed_audio     = parse_languages(full_audio_languages),
+    
+    # Combine vectors row-by-row, filter out empty strings, and count unique items
+    total_languages = purrr::map2_int(parsed_supported, parsed_audio, function(lang, audio) {
+      combined <- c(lang, audio)
+      combined <- combined[combined != "" & !is.na(combined)]
+      length(unique(combined))
+    })
+  ) %>%
+  # Clean up temporary helper columns
+  select(-parsed_supported, -parsed_audio)
 
+steam <- steam %>%
+  mutate(
+    num_tags = if_else(
+      tags == "{}" | tags == "", 
+      0, 
+      str_count(tags, ",") + 1
+    )
+  ) %>%
+  # Clean up temporary helper columns
+  select(-tags)
+
+steam <- steam %>%
+  mutate(
+    num_categories = if_else(
+      categories == "[]" | categories == "", 
+      0, 
+      str_count(categories, ",") + 1
+    )
+  ) %>%
+  # Clean up temporary helper columns
+  select(-categories)
 
 ####### 6. Genres Multi-Label (Filtered Core Genres Binary) ############
 steam[["genres"]] <- if_else(
@@ -134,9 +171,6 @@ core_genres <- c("Action", "Adventure", "Strategy", "Indie", "RPG", "Casual", "S
 genre_matrix <- map_dfc(core_genres, function(g) {
   tibble(!!paste0("genre_", g) := as.integer(map_lgl(parsed_genres_list, ~ g %in% .x)))
 })
-
-genre_matrix <- genre_matrix %>%
-  mutate(genre_Other = as.integer(rowSums(.) == 0))
 
 steam <- bind_cols(steam, genre_matrix)
 
@@ -161,7 +195,7 @@ steam[["owners_mid"]] <- (owners_lower + owners_upper) / 2
 
 ####### 8. Dropping Structural Parent Columns & Clean Export ###########
 # Retaining dlc_count, price, and achievements in raw form for EDA evaluation
-drop_columns <- c("release_date", "genres", "supported_languages", "full_audio_languages", "n_languages", "n_audio_languages")
+drop_columns <- c("release_date", "genres", "supported_languages", "full_audio_languages", "n_languages", "n_audio_languages", "windows", "linux", "mac")
 steam <- steam %>% select(-any_of(drop_columns))
 
 write.csv(
