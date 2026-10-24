@@ -14,8 +14,7 @@ steam_raw <- read_csv(raw_file)
 # which observable characteristics — genre, price, years
 # since release, platform availability, language coverage,
 # achievements and DLC — are associated with greater
-# popularity, measured primarily by estimated owner tier
-# and corroborated by total review count?
+# popularity?
 ##############################################################
 
 ######################################################################
@@ -86,10 +85,7 @@ steam <- steam %>%
   select(-release_month)
 
 
-####### 3. DLC Count to Binary (Derivation) ###########################
-# steam[["dlc_count"]][is.na(steam[["dlc_count"]])] <- 0
-# steam <- steam %>%
-#   mutate(has_dlc = if_else(dlc_count > 0, 1, 0))
+####### 3. Convert OS columns into counts of each row ###########################
 
 os.columns <- c("windows", "mac", "linux")
 
@@ -99,7 +95,6 @@ steam <- steam %>%
     num_supported_os = rowSums(across(all_of(os.columns))),
     
     # Convert the column to a factor 
-    # Note: your original code referenced 'no.supported_OS', 
     # but here we use 'num_supported_os' to keep it consistent.
     num_supported_os = as.factor(num_supported_os)
   )

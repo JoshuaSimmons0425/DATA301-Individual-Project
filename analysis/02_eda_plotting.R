@@ -15,6 +15,7 @@ df <- read.csv(df_path)
 
 df_summary <- summary(df)
 pander(df_summary)
+
 # A count table of NA values for each column
 
 na_table <- stack(colSums(is.na(df)))
@@ -43,6 +44,9 @@ ggplot(df_long, aes(x = reorder(genre_type, count), y = count, fill = genre_type
     y = "Total Count"
   ) +
   theme_minimal()
+
+# Save genre count plot
+ggsave("outputs/figures/genre_counts.png", width = 8, height = 6, dpi = 300)
 
 # Conduct a Chi-Square test of Indepedence to see if any of these genres are heaviliy associated with another
 
@@ -84,19 +88,25 @@ df_subset <- df %>% select(c("price", "achievements", "dlc_count", "total_langua
 
 df_log_subset <- as.data.frame(lapply(df_subset, log1p))
 
+# Save first pairs.panels plot
+png("outputs/figures/scatterplot_matrix_subset.png", width = 900, height = 900, res = 100)
 pairs.panels(df_subset, 
              main = "Scatterplot Matrix of Continous Features",
              method = "pearson", # correlation method
              hist.col = "green",  # histogram color
-             density = TRUE,     # show density plots
+             density = TRUE,    # show density plots
              ellipses = TRUE)    # show correlation ellipses
+dev.off()
 
+# Save second pairs.panels plot (log transformed)
+png("outputs/figures/scatterplot_matrix_log.png", width = 900, height = 900, res = 100)
 pairs.panels(df_log_subset, 
              main = "Scatterplot Matrix of Continous Features Log Transformed",
              method = "pearson", # correlation method
              hist.col = "gold",  # histogram color
-             density = TRUE,     # show density plots
+             density = TRUE,    # show density plots
              ellipses = TRUE)    # show correlation ellipses
+dev.off()
 
 # Exploring the picked subset of target variables that will be converted and derived into three seperate popularity indexes: Lifetime Engagement, Recent Velocity and User Sentiment
 
@@ -122,6 +132,8 @@ df_targets %>%
        subtitle = "X-axis is Log10 transformed to handle high skewness",
        x = "Value (Log Scale)", y = "Count")
 
+ggsave("outputs/figures/lifetime_engagement_distribution.png", width = 8, height = 6, dpi = 300)
+
 # -------------------------------------------------------------------------
 # Group 2: Recent Velocity & Engagement (Handling Zeros + Log Scale)
 # -------------------------------------------------------------------------
@@ -140,6 +152,8 @@ df_targets %>%
        subtitle = "X-axis uses log1p transformation to accommodate 0-minute values",
        x = "Playtime in Minutes (Log+1 Scale)", y = "Count")
 
+ggsave("outputs/figures/playtime_metrics_with_zeros.png", width = 8, height = 6, dpi = 300)
+
 df_targets %>%
   select(all_of(playtime_vars)) %>%
   filter(median_playtime_2weeks != 0, median_playtime_forever != 0) %>%
@@ -151,20 +165,34 @@ df_targets %>%
   facet_wrap(~Variable, scales = "free") +
   theme_minimal() +
   labs(title = "Distribution of Playtime Metrics (Without Zero Values)",
-       subtitle = "X-axis uses log1p transformation to accommodate 0-minute values",
+       subtitle = "0-minute values are removed and log(x+1) transformed",
        x = "Playtime in Minutes (Log+1 Scale)", y = "Count")
+
+ggsave("outputs/figures/playtime_metrics_no_zeros.png", width = 8, height = 6, dpi = 300)
 
 # -------------------------------------------------------------------------
 # Group 3: User Sentiment (Derived Ratios for better EDA value)
 # -------------------------------------------------------------------------
 # Absolute review counts are identical to engagement. For sentiment, 
 # it is much more useful to plot the positive review ratio.
+
+unusable_count <- df_targets %>% 
+  filter(positive == -1 | negative == -1 | (positive + negative) == 0) %>% 
+  nrow()
+
 df_targets %>%
+  filter(positive != -1 & negative != -1 & (positive + negative) > 0) %>%
   mutate(positive_ratio = positive / (positive + negative)) %>%
   ggplot(aes(x = positive_ratio)) +
   geom_histogram(bins = 20, fill = "forestgreen", color = "white", boundary = 0) +
   scale_x_continuous(labels = scales::percent_format(), limits = c(0, 1)) +
   theme_minimal() +
-  labs(title = "Distribution of User Sentiment",
-       subtitle = "Percentage of positive reviews out of total reviews",
-       x = "Positive Review Ratio", y = "Count")
+  labs(
+    title = "Distribution of User Sentiment",
+    subtitle = "Percentage of positive reviews out of total reviews (posotive + negative)",
+    caption = paste0("Excluded Data: ", unusable_count, " rows with unusable values (-1 or 0 total reviews) removed"),
+    x = "Positive Review Ratio", 
+    y = "Count"
+  )
+
+ggsave("outputs/figures/user_sentiment_distribution.png", width = 8, height = 6, dpi = 300)
