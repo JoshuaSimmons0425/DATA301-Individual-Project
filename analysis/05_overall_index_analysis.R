@@ -132,3 +132,25 @@ print("=========================================================================
 pander(inference_summary)
 print("=========================================================================")
 print(paste("Global Model Adjusted R-Squared:", round(summary(global_mlr)$adj.r.squared, 4)))
+
+# 1. Which column is the test file sorted by?
+rho <- function(df) sapply(df, function(x) abs(cor(seq_along(x), x, method = "spearman")))
+sort(rho(test_data), decreasing = TRUE)[1:5]
+sort(rho(train_data), decreasing = TRUE)[1:5]   # should all be near 0
+
+# 2. DW with the meaningless order removed (expect ~2)
+set.seed(42); dwtest(global_mlr, order.by = runif(nrow(d)))
+
+# 3. Which sub-index drives the overall index's variance?
+comp <- cbind(E = 0.5 * d$lifetime_engagement_index,
+              V = 0.3 * d$recent_velocity_index,
+              S = 0.2 * d$user_sentiment_index)
+y <- d$overall_popularity_index
+round(c(overall = sd(y), apply(comp, 2, sd)), 2)
+round(apply(comp, 2, function(x) cov(x, y) / var(y)), 3)   # shares sum to 1
+
+# 4. Same OLS for each sub-index 
+outs <- c("lifetime_engagement_index", "recent_velocity_index", "user_sentiment_index")
+fits <- lapply(outs, function(o) lm(update(final_formula, as.formula(paste(o, "~ ."))), data = d))
+sapply(fits, function(f) summary(f)$adj.r.squared)
+lapply(fits, function(f) coeftest(f, vcov = vcovHC(f, type = "HC3")))
