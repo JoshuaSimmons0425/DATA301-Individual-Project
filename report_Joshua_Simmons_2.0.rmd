@@ -72,7 +72,7 @@ Two modelling approaches were used. Random Forest models were used only to descr
 
 ### About this version
 
-This extended version of the report submitted for DATA301 removes the original page limit. It adds model-fit statistics, regression diagnostics and a breakdown of the overall results by popularity dimension, and it states the limitations of the analysis more explicitly. It also corrects several points in the original: the working set contains `r n_work` games (the original stated 49,682), one correlation coefficient in the exploratory analysis has been corrected, the treatment of zero and unrecorded values has been clarified, and the interpretations of the season, genre and cross-platform results have been revised to match the evidence. Causal-sounding language has been replaced with language about association throughout.
+This extended version of the report submitted for DATA301 removes the original page limit. It adds model-fit statistics, regression diagnostics and a breakdown of the overall results by popularity dimension, and it states the limitations of the analysis more explicitly. It also corrects previous errors in the original: the working set contains `r n_work` games (the original stated 49,682), one correlation coefficient in the exploratory analysis has been corrected, the treatment of zero and unrecorded values has been clarified, and the interpretations of the season, genre and cross-platform results have been revised to match the evidence.
 
 # Background
 
